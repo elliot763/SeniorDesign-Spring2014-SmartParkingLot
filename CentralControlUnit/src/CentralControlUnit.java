@@ -74,6 +74,9 @@ public class CentralControlUnit {
 		
 		CCU.checkIfBestSpace(CCU.spaces.get(0));
 		
+		System.out.println("Test group controller address64: " 
+				+ CCU.spaces.get(0).getController().getAddress64());
+		
 //		CCU.xBee.open("COMX", 9600);
 //		
 //		while (true) {
@@ -127,11 +130,11 @@ public class CentralControlUnit {
 						.equals("END_GROUP_CONTROLLERS")) {
 					if (!nextLine.isEmpty()) {
 						
-						String[] gcParams = nextLine.split(" ");
+						String[] gcParams = nextLine.split(" ", 4);
 						GroupController controller = new GroupController(
 								Integer.parseInt(gcParams[1]), 
 								Integer.parseInt(gcParams[2]), 
-								gcParams[0]);
+								gcParams[0], gcParams[3]);
 						
 						while (!(nextLine = br.readLine().trim())
 								.equals("END_SPACES")) {
