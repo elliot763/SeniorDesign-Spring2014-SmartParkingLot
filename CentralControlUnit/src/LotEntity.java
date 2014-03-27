@@ -1,6 +1,16 @@
 
 /**
- * 
+ * The LotEntity class is an abstract class that extended by all other lot
+ * components (except the CentralControlUnit). It's main function is to define
+ * a lot component's position within the lot and it's identifier. The x and y
+ * components of the position are related to the physical location of the lot
+ * component and are directly derived from the map of the lot that is displayed 
+ * to the drivers by the entrance controllers. These values are measured from 
+ * the top-left corner of the map and are a percentage of the total width and
+ * height of the map (e.g. The point (100, 100) would be at the bottom-right
+ * corner of the map. The string identifier is arbitrary and the conventions 
+ * of it's use vary for different object types. This class also provides a
+ * method for determining the distance between any two lot entities.
  * 
  * @author Elliot Dean
  */
@@ -12,7 +22,7 @@ public abstract class LotEntity {
 	/** The y position of the lot entity from an administrator chosen origin */
 	private final int y;
 	
-	/** The identification number of the lot entity*/
+	/** The identifier of the lot entity*/
 	private final String id;
 	
 	/**

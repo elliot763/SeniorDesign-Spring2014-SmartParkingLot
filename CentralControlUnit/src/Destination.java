@@ -1,5 +1,11 @@
 
 /**
+ * The Destination class represents a physical destination within a Smart
+ * Parking Lot (e.g. An entrance to a store or business). It has a single 
+ * ParkingSpace variable that represents the nearest available parking space to
+ * the destination. Since there is no Smart Parking lot hardware that directly
+ * related to each lot destination, the only other attributes that are assigned
+ * to a destination are its position coordinates.
  * 
  * @author Elliot Dean
  */
@@ -14,7 +20,7 @@ public class Destination extends LotEntity{
 	 * 
 	 * @param x: The destinations x coordinate
 	 * @param y: The destinations y coordinate
-	 * @param id: The destinations identification number
+	 * @param id: The destinations identifier
 	 */
 	public Destination(int x, int y, String id) {
 		super(x, y, id);

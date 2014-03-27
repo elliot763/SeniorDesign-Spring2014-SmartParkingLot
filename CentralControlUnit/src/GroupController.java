@@ -2,6 +2,14 @@ import com.rapplogic.xbee.api.XBeeAddress16;
 import com.rapplogic.xbee.api.XBeeAddress64;
 
 /**
+ * The GroupController class represents a physical group controller within a
+ * Smart Parking Lot. Since each group controller has it's own XBee radio with
+ * a unique 64-bit address, the class stores this address which must be passed
+ * to the constructor in order to communicate with the radio. The class also
+ * has a method that allows ParkingSpace objects to be added to it which
+ * represent the parking space sensors that are attached to the physical group
+ * controller. The class extends the LotEntity abstract class and therefore
+ * has position coordinates which can be accessed.
  * 
  * @author Elliot Dean
  */
@@ -15,7 +23,7 @@ public class GroupController extends LotEntity {
 	 * 
 	 * @param x: The x coordinate of the group controller
 	 * @param y: The y coordinate of the group controller
-	 * @param id: The group controllers identification number
+	 * @param id: The group controllers identifier
 	 */
 	public GroupController(int x, int y, String id, String address) {
 		super(x, y, id);
@@ -35,14 +43,30 @@ public class GroupController extends LotEntity {
 		return new ParkingSpace(x, y, id, this);
 	} // addSpace
 	
+	/**
+	 * Returns the 64-bit address of this group controller's XBee radio.
+	 * 
+	 * @return the 64-bit address of the XBee
+	 */
 	public XBeeAddress64 getAddress64() {
 		return this.address64;
 	} // getAddress64
 	
+	/**
+	 * Returns the current 16-bit network address of this group controller's
+	 * XBee radio.
+	 * 
+	 * @return the 16-bit address of the XBee
+	 */
 	public XBeeAddress16 getAddress16() {
 		return this.address16;
 	} // getAddress16
 	
+	/**
+	 * Sets the 16-bit network address of this group controller's XBee radio.
+	 * 
+	 * @param address: An XBeeAddress16 object representing the network address
+	 */
 	public void setAddress16(XBeeAddress16 address) {
 		this.address16 = address;
 	} // setAddress16

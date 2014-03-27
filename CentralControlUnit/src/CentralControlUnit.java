@@ -7,7 +7,13 @@ import com.rapplogic.xbee.api.XBee;
 import com.rapplogic.xbee.api.XBeeException;
 
 /**
- * XBee Packet Structure (72 Byte Maximum)
+ * The CentralConrolUnit class represents the central control unit of a Smart
+ * Parking Lot and contains all of the necessary functions that allow the 
+ * control unit to keep track of changes within the lot and communicate with
+ * other lot components. The main method of the CentralControlUnit class first
+ * sets up the CentralControlUnit object and other objects for various lot
+ * components and also contains the main programming loop that runs the entire 
+ * time that the Smart Parking Lot is active.
  * 
  * @author Elliot Dean
  */
@@ -48,7 +54,8 @@ public class CentralControlUnit {
 		
 		CentralControlUnit CCU = new CentralControlUnit();
 		CCU.initialize("SmartLot.txt");
-		
+//		CCU.xBee.open("COMX", 9600);
+
 		for (Destination dest : CCU.destinations) {
 			System.out.println("Destination: " + dest.getId());
 			System.out.println("\tX: " + dest.getX() + "\tY: " + dest.getY());
@@ -77,8 +84,6 @@ public class CentralControlUnit {
 		System.out.println("Test group controller address64: " 
 				+ CCU.spaces.get(0).getController().getAddress64());
 		
-//		CCU.xBee.open("COMX", 9600);
-//		
 //		while (true) {
 //			
 //			// Check for input to enter admin control (could be separate thread)
