@@ -3,6 +3,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Scanner;
+
 import com.rapplogic.xbee.api.ApiId;
 import com.rapplogic.xbee.api.XBee;
 import com.rapplogic.xbee.api.XBeeAddress64;
@@ -48,42 +50,16 @@ public class CentralControlUnit {
 		CentralControlUnit CCU = new CentralControlUnit();
 		CCU.initialize("SmartLot.txt");
 //		CCU.xBee.open("COMX", 9600);
+		Thread admin = new Thread(CCU.new AdminControl(CCU));
+		admin.start();
 		
-		for (Destination dest : CCU.destinations) {
-			System.out.println("Destination: " + dest.getId());
-			System.out.println("\tX: " + dest.getX() + "\tY: " + dest.getY());
-		} // for each - destinations
-		
-		for (ParkingSpace space : CCU.spaces) {
-			System.out.println("Space: " + space.getId());
-			System.out.println("\tX: " + space.getX()
-					+ "\tY: " + space.getY()
-					+ "\tController ID: " + space.getController().getId());
-		} // for each - spaces
-		
-		System.out.println("\nDistance between destination " 
-				+ CCU.destinations.get(0).getId() + " and space "
-				+ CCU.spaces.get(0).getId() + ": " 
-				+ CCU.destinations.get(0).distance(CCU.spaces.get(0)));
-		
-		CCU.updateBestSpaces();
-		for (Destination dest : CCU.destinations)
-			System.out.println("Best space for destination " + dest.getId()
-					+ ": " + dest.getBestSpace().getId() + " - Distance: "
-					+ dest.distance(dest.getBestSpace()));
-		
-		CCU.checkIfBestSpace(CCU.spaces.get(0));
-		
-		System.out.println("Test group controller address64: " 
-				+ CCU.spaces.get(0).getController().getAddress64());
-		
-		while (true) {
-			
-			// Check for input to enter admin control (could be separate thread)
-			XBeeResponse response = CCU.xBee.getResponse();
-			CCU.processResponse(response);
-			
-		} // while - main program loop
+//		while (true) {
+//			
+//			// Check for input to enter admin control (could be separate thread)
+//			XBeeResponse response = CCU.xBee.getResponse();
+//			CCU.processResponse(response);
+//			
+//		} // while - main program loop
 		
 	} // main
 	
@@ -277,10 +253,17 @@ public class CentralControlUnit {
 				if (updatedSpace == null)
 					System.out.println("Error: Unable to find updated space");
 				else {
-					if (rxResponse.getData()[2] == 'A')
+					if (rxResponse.getData()[2] == 'A') {
 						updatedSpace.setAvailable(true);
-					else
+						this.checkIfBestSpace(updatedSpace);
+					} // if - space became available
+					else if (rxResponse.getData()[2] == 'O') {
 						updatedSpace.setAvailable(false);
+						for (Destination dest : this.destinations) {
+							if (dest.getBestSpace() == updatedSpace)
+								this.updateBestSpaces(dest);
+						} // for - check if space was any destination's best
+					} // else if - space became occupied
 				} // else - space found and updated
 					
 			} // else if - space status update
@@ -377,5 +360,53 @@ public class CentralControlUnit {
 		} // for - send reservation message to each spaces controller
 		
 	} // sendReservationRequests
+	
+	private class AdminControl implements Runnable {
+
+		CentralControlUnit CCU;
+		
+		AdminControl(CentralControlUnit CCU) {
+			this.CCU = CCU;
+		} // AdminControl
+		
+		@Override
+		public void run() {
+				Scanner keyboard = new Scanner(System.in);
+				System.out.println("Welcome to the Smart Parking Lot "
+						+ "administrative control panel. (type h for help)");
+			while (true) {
+				String input = keyboard.nextLine();
+				if (input.equalsIgnoreCase("h")) {
+					System.out.println("'D': Show destination info");
+					System.out.println("'S': Show parking space info");
+					System.out.println("'Q': Exit administrative control");
+				} // if - help menu
+				else if (input.equalsIgnoreCase("D")) {
+					for (Destination dest : CCU.destinations) {
+						System.out.println("Destination: " + dest.getId());
+						System.out.println("\tX: " + dest.getX() + "\tY: " 
+						+ dest.getY());
+					} // for each - destinations
+				} // else if - Destination info
+				else if (input.equalsIgnoreCase("S")) {
+					for (ParkingSpace space : CCU.spaces) {
+						System.out.println("Space: " + space.getId());
+						String available = (space.isAvailable() ? 
+								"Available" : "Occupied");
+						System.out.println("\tX: " + space.getX()
+								+ "\tY: " + space.getY()
+								+ "\tController ID: " 
+								+ space.getController().getId()
+								+ "\t" + available);
+					} // for each - spaces
+				} // else if - Space info
+				
+				else if (input.equals("Q")) 
+					break;
+			} // while - true
+			keyboard.close();
+		}
+		
+	} // adminControl
 	
 } // CentralControlUnit - Class
