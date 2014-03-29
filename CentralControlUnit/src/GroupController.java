@@ -1,4 +1,3 @@
-import com.rapplogic.xbee.api.XBeeAddress16;
 import com.rapplogic.xbee.api.XBeeAddress64;
 
 /**
@@ -16,7 +15,6 @@ import com.rapplogic.xbee.api.XBeeAddress64;
 public class GroupController extends LotEntity {
 	
 	private final XBeeAddress64 address64;
-	private XBeeAddress16 address16;
 	
 	/**
 	 * Creates an object that represents a physical group controller.
@@ -51,24 +49,5 @@ public class GroupController extends LotEntity {
 	public XBeeAddress64 getAddress64() {
 		return this.address64;
 	} // getAddress64
-	
-	/**
-	 * Returns the current 16-bit network address of this group controller's
-	 * XBee radio.
-	 * 
-	 * @return the 16-bit address of the XBee
-	 */
-	public XBeeAddress16 getAddress16() {
-		return this.address16;
-	} // getAddress16
-	
-	/**
-	 * Sets the 16-bit network address of this group controller's XBee radio.
-	 * 
-	 * @param address: An XBeeAddress16 object representing the network address
-	 */
-	public void setAddress16(XBeeAddress16 address) {
-		this.address16 = address;
-	} // setAddress16
 	
 } // GroupController - Class
