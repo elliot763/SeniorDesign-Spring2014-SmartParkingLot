@@ -1,0 +1,33 @@
+<SmartParkingLot>
+	<Destination>
+		<Identifier>D1</Identifier>
+		<XCoordinate>20</XCoordinate>
+		<YCoordinate>0</YCoordinate>
+	</Destination>
+	<Destination>
+		<Identifier>D1</Identifier>
+		<XCoordinate>20</XCoordinate>
+		<YCoordinate>0</YCoordinate>
+	</Destination>
+	<GroupController>
+		<Identifier>G1</Identifier>
+		<XCoordinate>10</XCoordinate>
+		<YCoordinate>10</YCoordinate>
+		<Address>00 00 00 00 00 00 00 00</Address>
+		<Space>
+			<Identifier>1</Identifier>
+			<XCoordinate>2</XCoordinate>
+			<YCoordinate>-3</YCoordinate>
+		</Space>
+		<Space>
+			<Identifier>2</Identifier>
+			<XCoordinate>2</XCoordinate>
+			<YCoordinate>0</YCoordinate>
+		</Space>
+		<Space>
+			<Identifier>3</Identifier>
+			<XCoordinate>2</XCoordinate>
+			<YCoordinate>3</YCoordinate>
+		</Space>
+	</GroupController>
+</SmartParkingLot>
