@@ -53,20 +53,20 @@ public class CentralControlUnit {
 		Thread admin = new Thread(CCU.new AdminControl(CCU));
 		admin.start();
 		
-//		while (true) {
-//			
-//			// Check for input to enter admin control (could be separate thread)
-//			XBeeResponse response = CCU.xBee.getResponse();
-//			CCU.processResponse(response);
-//			
-//		} // while - main program loop
+		while (true) {
+			
+			// Check for input to enter admin control (could be separate thread)
+			XBeeResponse response = CCU.xBee.getResponse();
+			CCU.processResponse(response);
+			
+		} // while - main program loop
 		
 	} // main
 	
 	/**
 	 * Creates a CentralControlUnit object
 	 */
-	public CentralControlUnit() {
+	private CentralControlUnit() {
 		destinations = new LinkedList<Destination>();
 		spaces = new LinkedList<ParkingSpace>();
 		addressMap = new HashMap<XBeeAddress64, GroupController>();
@@ -361,10 +361,20 @@ public class CentralControlUnit {
 		
 	} // sendReservationRequests
 	
+	/**
+	 * This runnable inner class is meant to be ran as a thread beside the
+	 * Central Control Unit's main program. It allows lot conditions to be
+	 * monitored and (eventually) controlled.
+	 */
 	private class AdminControl implements Runnable {
 
 		CentralControlUnit CCU;
 		
+		/**
+		 * Creates an AdminControl object.
+		 * 
+		 * @param CCU: The Central Control Unit object that is being monitored.
+		 */
 		AdminControl(CentralControlUnit CCU) {
 			this.CCU = CCU;
 		} // AdminControl
