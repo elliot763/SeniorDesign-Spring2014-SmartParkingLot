@@ -1,6 +1,8 @@
 import java.awt.Color;
 import java.awt.Frame;
 import java.awt.Graphics;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -24,7 +26,10 @@ import javax.swing.JPanel;
  */
 @SuppressWarnings("serial")
 public class EntranceDisplay extends JPanel {
-
+	
+	/** Object used for full screen rendering */
+	static GraphicsDevice device = GraphicsEnvironment
+	        .getLocalGraphicsEnvironment().getScreenDevices()[0];
 	/** The map of the parking lot */
 	private BufferedImage map;
 	/** The map, scaled so that it's largest dimension fits the screen */
@@ -126,7 +131,6 @@ public class EntranceDisplay extends JPanel {
 		frame.setLocation(0, 0);
 		frame.setBackground(Color.BLACK);
 		frame.setUndecorated(true);
-		frame.setExtendedState(Frame.MAXIMIZED_BOTH);
 		frame.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) {
@@ -140,7 +144,9 @@ public class EntranceDisplay extends JPanel {
 		frame.add(display);
 
 		// Shows the frame
+		device.setFullScreenWindow(frame);
 		frame.pack();
+		frame.setExtendedState(Frame.MAXIMIZED_BOTH);
 		frame.setVisible(true);
 		frame.setResizable(false);
 		
