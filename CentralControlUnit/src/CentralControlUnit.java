@@ -49,9 +49,10 @@ public class CentralControlUnit {
 		
 		CentralControlUnit CCU = new CentralControlUnit();
 		CCU.initialize("SmartLot.txt");
-//		CCU.xBee.open("COMX", 9600);
+		CCU.xBee.open("COM4", 9600);
 		Thread admin = new Thread(CCU.new AdminControl(CCU));
 		admin.start();
+		CCU.updateBestSpaces();
 		
 		while (true) {
 			
@@ -269,13 +270,16 @@ public class CentralControlUnit {
 			} // else if - space status update
 			
 			else {
-				System.out.println("Unknown packet received");
+				System.out.println("Unknown packet received:" + rxResponse.getData()[0]);
 			} // else - error
 			
 		} // if - RX response
 		
+		else if (response.getApiId() == ApiId.ZNET_TX_STATUS_RESPONSE)
+			return;
+		
 		else {
-			System.out.println("Error: unexpected ApiId");
+			System.out.println("Error: unexpected ApiId:" + response.getApiId());
 		} // else - error
 		
 	} // processResponse
@@ -304,11 +308,13 @@ public class CentralControlUnit {
 			bestSpaces[i].setAvailable(false);
 		} // for - put each best space in array to be returned
 		
-		int[] payload = new int[bestSpaces.length*2 + 1];
+		int[] payload = new int[bestSpaces.length*4 + 1];
 		payload[0] = 'D';
 		for (int i = 0; i < bestSpaces.length; i++) {
-			payload[i*2 + 1] = bestSpaces[i].getX();
-			payload[i*2 + 2] = bestSpaces[i].getY();
+			payload[i*4 + 1] = (bestSpaces[i].getX() >> 8) & 0xFF;
+			payload[i*4 + 2] = bestSpaces[i].getX() & 0xFF;
+			payload[i*4 + 3] = (bestSpaces[i].getY() >> 8) & 0xFF;
+			payload[i*4 + 4] = bestSpaces[i].getY() & 0xFF;
 		} // for - add coordinates to the payload
 		
 		ZNetTxRequest message = new ZNetTxRequest(address, payload);
@@ -343,7 +349,7 @@ public class CentralControlUnit {
 			XBeeAddress64 address = space.getController().getAddress64();
 			ZNetTxRequest message = new ZNetTxRequest(address, new int[] {'R', 
 					Integer.parseInt(space.getId().substring(
-							space.getId().lastIndexOf('.')))});
+							space.getId().lastIndexOf('.') + 1))});
 			while(true) {
 				try {
 					ZNetTxStatusResponse response = (ZNetTxStatusResponse)this.xBee
