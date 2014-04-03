@@ -22,12 +22,19 @@ import com.rapplogic.xbee.api.zigbee.ZNetTxRequest;
 import com.rapplogic.xbee.api.zigbee.ZNetTxStatusResponse;
 
 /**
- * Needs to be written.
+ * The EntranceController class allows a Raspberry Pi, along with an XBee radio
+ * and two ultrasonic sensors, to be used as an entrance controller in a Smart
+ * Parking Lot. When executed, a map of the lot will be displayed full screen
+ * and will update with space suggestions for each lot destination each time a
+ * vehicle is detected entering the lot at this entrance. The path to the
+ * serial port that the XBee is connected to should be supplied as a runtime
+ * parameter.
  * 
  * @author Elliot Dean
  */
 public class EntranceController {
 	
+	// Objects used to poll the ultrasonic entrance sensors
 	final GpioController gpio = GpioFactory.getInstance();
 	final GpioPinDigitalMultipurpose s1 = gpio.provisionDigitalMultipurposePin(
 			RaspiPin.GPIO_00, PinMode.DIGITAL_OUTPUT);
@@ -38,15 +45,20 @@ public class EntranceController {
 	
 	EntranceDisplay display;
 	XBee xBee;
-	//XBeeAddress64 CCUAddress = new XBeeAddress64("00 13 A2 00 40 90 2D EC");
 	
 	int controllerId = 0; // The entrance number
 	int nextEntranceId = 0;
 	long markerDisplayTime = 7000; // Milliseconds to display space markers
-	long thresholdDistance = 20;
+	long thresholdDistance = 20; // Maximum detection distance
 	
 	/**
-	 * Needs to be written.
+	 * The program will begin by initializing the necessary objects and
+	 * starting the EntranceDisplay in a separate thread. It then enters the
+	 * main program loop which will continually check if a vehicle is entering
+	 * the lot and if one is detected it will notify the Central Control Unit
+	 * which will then return a list of coordinates for each suggestion. Those
+	 * coordinates will then be indicated on the display for a set amount of
+	 * time or until another vehicle is detected.
 	 * 
 	 * @throws InterruptedException
 	 * @throws XBeeException 
@@ -69,6 +81,7 @@ public class EntranceController {
 		
 		Timer timer = new Timer();
 		
+		// The main program loop
 		while (true) {
 			
 			if (controller.checkVehicleDetected()) {
@@ -76,21 +89,37 @@ public class EntranceController {
 				// Notifies the Central Control Unit and gets space suggestions
 				ArrayList<int[]> spaces = controller.getSpaceSuggestions();
 				
-				// Updates the display with the new markers
-				controller.display.clearSpaces();
-				for (int[] position : spaces)
-					controller.display.addSpace(position[0], position[1]);
-				controller.display.updateUI();
+				if (spaces.size() > 0) {
+					
+					// Updates the display with the new markers
+					controller.display.clearSpaces();
+					for (int[] position : spaces)
+						controller.display.addSpace(position[0], position[1]);
+					controller.display.updateUI();
+
+					// Sets a timer for how long to display the suggestions
+					timer.schedule(new TimerTask() {
+						@Override
+						public void run() {
+							controller.display.clearSpaces();
+							controller.display.updateUI();
+						} // Time out actions
+					}, controller.markerDisplayTime);
+					
+				} // if - spaces are available
 				
-				// Sets timer for how long to display and cancels current timer
-				timer.schedule(new TimerTask() {
-					@Override
-					public void run() {
-						controller.display.clearSpaces();
-						controller.display.updateUI();
-					} // run
-				}, controller.markerDisplayTime);
-			
+				else {
+					
+					// Displays a message for a specified time
+					controller.display.displayLotFullMessage();
+					timer.schedule(new TimerTask() {
+						public void run() {
+							controller.display.clearLotFullMessage();
+						} // Time out actions
+					}, controller.markerDisplayTime);
+					
+				} // else - lot full
+				
 			} // if - vehicle detected
 			
 			// Time between polling

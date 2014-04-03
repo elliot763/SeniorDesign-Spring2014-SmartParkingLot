@@ -40,6 +40,10 @@ public class EntranceDisplay extends JPanel {
 	private int scaledMapWidth, scaledMapHeight, mapTopEdge, mapLeftEdge;
 	/** The list of spaces to be drawn */
 	private ArrayList<int[]> spaces;
+	/** An image to be shown when the lot is full */
+	private Image lotFullImage;
+	/** Whether the lot full message should be drawn */
+	private boolean displayLotFull = false;
 	
 	/**
 	 * This method is used to set the dimensions of the map image and
@@ -50,6 +54,8 @@ public class EntranceDisplay extends JPanel {
 	private void initializeDisplay(JFrame frame) {
 		
 		try {
+			
+			lotFullImage = ImageIO.read(new File("LotFull.png"));
 			map = ImageIO.read(new File("LotTest.png"));
 			if (frame.getWidth() <= frame.getHeight()) {
 				scaledMap = map.getScaledInstance(frame.getWidth(), -1, 
@@ -63,11 +69,13 @@ public class EntranceDisplay extends JPanel {
 				mapTopEdge = 0;
 				mapLeftEdge = frame.getWidth()/2 - scaledMap.getWidth(null)/2;
 			} // else - fit to height of screen
+			
 			mapHeight = map.getHeight();
 			scaledMapHeight = scaledMap.getHeight(null);
 			mapWidth = map.getWidth();
 			scaledMapWidth = scaledMap.getWidth(null);	
 			spaces = new ArrayList<int[]>();
+		
 		} catch (IOException e) {
 			System.out.println(e.getMessage());
 		} // try-catch
@@ -97,6 +105,25 @@ public class EntranceDisplay extends JPanel {
 		this.spaces.clear();
 	} // clearSpaces
 	
+	/**
+	 * This method will clear any space suggestions that are currently being
+	 * displayed and than immediately show a message indicating that the lot
+	 * is full.
+	 */
+	public void displayLotFullMessage() {
+		this.clearSpaces();
+		this.displayLotFull  = true;
+		this.updateUI();
+	} // displayLotFullMessage
+	
+	/**
+	 * This method will immediately remove a lot full message.
+	 */
+	public void clearLotFullMessage() {
+		this.displayLotFull = false;
+		this.updateUI();
+	} // clearLotFullMessage
+	
 	@Override
 	public void paint(Graphics g) {
 		super.paintComponents(g);
@@ -113,6 +140,12 @@ public class EntranceDisplay extends JPanel {
 					mapTopEdge + (spaces.get(i)[1] * scaledMapHeight
 					/ this.mapHeight - circleRadius/2), 
 					circleRadius, circleRadius);
+		
+		if (this.displayLotFull)
+			g.drawImage(lotFullImage, 
+					scaledMapWidth/2 - lotFullImage.getWidth(null)/2, 
+					scaledMapHeight/2 - lotFullImage.getHeight(null)/2, null);
+		
 	} // paint
 	
 	/**
