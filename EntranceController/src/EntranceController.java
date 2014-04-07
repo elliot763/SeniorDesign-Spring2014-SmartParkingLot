@@ -249,7 +249,7 @@ public class EntranceController {
 		long endTime = System.nanoTime();
 		
 		// Return true only if the sensed distance is less than the threshold
-		if (distance((endTime - startTime) * 1000) < thresholdDistance)
+		if (distance((endTime - startTime) / 1000) < thresholdDistance)
 			return true;
 		else
 			return false;
@@ -290,7 +290,7 @@ public class EntranceController {
 		long endTime = System.nanoTime();
 		
 		// Return true only if the sensed distance is less than the threshold
-		if (distance((endTime - startTime) * 1000) < thresholdDistance)
+		if (distance((endTime - startTime) / 1000) < thresholdDistance)
 			return true;
 		else
 			return false;
@@ -299,13 +299,13 @@ public class EntranceController {
 	
 	/**
 	 * This method converts the time of the input pulse from an ultrasonic 
-	 * sensor to a distance.
+	 * sensor to an approximate distance in centimeters.
 	 * 
 	 * @param time: The length of the sensor pulse in microseconds
 	 * @return
 	 */
 	private long distance(long time) {
-		return time / 29 / 2;
+		return time / 29;
 	} // distance
 	
 } // EntranceController - Class
