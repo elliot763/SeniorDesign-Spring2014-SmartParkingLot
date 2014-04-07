@@ -32,7 +32,7 @@ public class Destination extends LotEntity{
 	 * @param space: The new closest available space to the destination
 	 */
 	public void setBestSpace(ParkingSpace space) {
-		if (space.isAvailable())
+		if (space == null || space.isAvailable())
 			this.bestSpace = space;
 		else
 			System.out.println("Error: attempt to set occupied space as best");

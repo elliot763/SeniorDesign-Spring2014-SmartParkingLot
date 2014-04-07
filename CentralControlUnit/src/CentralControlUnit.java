@@ -48,7 +48,7 @@ public class CentralControlUnit {
 	public static void main(String[] args) throws IOException, XBeeException {
 		
 		CentralControlUnit CCU = new CentralControlUnit();
-		CCU.initialize("SmartLot.txt");
+		CCU.initialize("SmallLot.txt");
 		CCU.xBee.open("COM4", 9600);
 		Thread admin = new Thread(CCU.new AdminControl(CCU));
 		admin.start();
@@ -182,10 +182,11 @@ public class CentralControlUnit {
 	 */
 	private void checkIfBestSpace(ParkingSpace space) {
 		for (Destination dest : this.destinations)
-			if (dest.distance(space) < dest.distance(dest.getBestSpace()))
+			if (dest.getBestSpace() == null || 
+			dest.distance(space) < dest.distance(dest.getBestSpace()))
 				dest.setBestSpace(space);
 	} // checkIfBestSpace
-	
+
 	/**
 	 * Takes an XBee response and processes it. The different types of messages
 	 * that are expected and their formats are as follows:
@@ -305,16 +306,19 @@ public class CentralControlUnit {
 		ParkingSpace[] bestSpaces = new ParkingSpace[this.destinations.size()];
 		for (int i = 0; i < this.destinations.size(); i++) {
 			bestSpaces[i] = this.destinations.get(i).getBestSpace();
-			bestSpaces[i].setAvailable(false);
+			if (bestSpaces[i] != null)
+				bestSpaces[i].setAvailable(false);
 		} // for - put each best space in array to be returned
 		
 		int[] payload = new int[bestSpaces.length*4 + 1];
 		payload[0] = 'D';
 		for (int i = 0; i < bestSpaces.length; i++) {
-			payload[i*4 + 1] = (bestSpaces[i].getX() >> 8) & 0xFF;
-			payload[i*4 + 2] = bestSpaces[i].getX() & 0xFF;
-			payload[i*4 + 3] = (bestSpaces[i].getY() >> 8) & 0xFF;
-			payload[i*4 + 4] = bestSpaces[i].getY() & 0xFF;
+			if (bestSpaces[i] != null) {
+				payload[i*4 + 1] = (bestSpaces[i].getX() >> 8) & 0xFF;
+				payload[i*4 + 2] = bestSpaces[i].getX() & 0xFF;
+				payload[i*4 + 3] = (bestSpaces[i].getY() >> 8) & 0xFF;
+				payload[i*4 + 4] = bestSpaces[i].getY() & 0xFF;
+			} // if - space exists
 		} // for - add coordinates to the payload
 		
 		ZNetTxRequest message = new ZNetTxRequest(address, payload);
@@ -344,25 +348,26 @@ public class CentralControlUnit {
 	 * @param spaces: the spaces to be reserved
 	 */
 	private void sendReservationRequests(ParkingSpace[] spaces) {
-		
+
 		for (ParkingSpace space : spaces) {
-			XBeeAddress64 address = space.getController().getAddress64();
-			ZNetTxRequest message = new ZNetTxRequest(address, new int[] {'R', 
-					Integer.parseInt(space.getId().substring(
-							space.getId().lastIndexOf('.') + 1))});
-			while(true) {
-				try {
-					ZNetTxStatusResponse response = (ZNetTxStatusResponse)this.xBee
-							.sendSynchronous(message, 3000);
-					if (response.isSuccess())
-						break;
-					else
-						throw new XBeeException();
-				} catch (XBeeException e) {
-					continue; // Message failed, try again
-				} // try-catch
-			} // while - trying to send the message
-			
+			if (space != null) {
+				XBeeAddress64 address = space.getController().getAddress64();
+				ZNetTxRequest message = new ZNetTxRequest(address, new int[] {'R', 
+						Integer.parseInt(space.getId().substring(
+								space.getId().lastIndexOf('.') + 1))});
+				while(true) {
+					try {
+						ZNetTxStatusResponse response = (ZNetTxStatusResponse)this.xBee
+								.sendSynchronous(message, 3000);
+						if (response.isSuccess())
+							break;
+						else
+							throw new XBeeException();
+					} catch (XBeeException e) {
+						continue; // Message failed, try again
+					} // try-catch
+				} // while - trying to send the message
+			} // if - space exists
 		} // for - send reservation message to each spaces controller
 		
 	} // sendReservationRequests

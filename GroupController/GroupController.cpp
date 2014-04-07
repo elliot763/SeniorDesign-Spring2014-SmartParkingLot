@@ -46,7 +46,7 @@ long reservationTime[numberOfSensors];
 
 // Variables used for XBee communication
 XBee xbee = XBee();
-uint8_t payload[] = {'S', 'D', 'A'};
+uint8_t payload[] = {'S', 0, 'A'};
 XBeeAddress64 CCU = XBeeAddress64(0x0, 0x0);
 ZBRxResponse rx = ZBRxResponse();
 ZBTxRequest tx = ZBTxRequest(CCU, payload, sizeof(payload));
@@ -192,11 +192,10 @@ long checkDistance(int pingPin) {
 
 /*
  * This method converts the duration of an input pulse from an ultrasonic
- * sensor to a distance value based on an equation given by the sensor's
- * manufacturer.
+ * sensor to an approximate distance in centimeters.
  */
 long distance(long time) {
-	return time/29/2;
+	return time/29;
 } // distance
 
 /*
