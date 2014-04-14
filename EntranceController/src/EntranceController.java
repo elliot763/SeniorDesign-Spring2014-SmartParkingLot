@@ -5,9 +5,7 @@ import java.util.TimerTask;
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.io.gpio.GpioPinDigitalInput;
-import com.pi4j.io.gpio.GpioPinDigitalMultipurpose;
 import com.pi4j.io.gpio.GpioPinDigitalOutput;
-import com.pi4j.io.gpio.PinMode;
 import com.pi4j.io.gpio.PinPullResistance;
 import com.pi4j.io.gpio.PinState;
 import com.pi4j.io.gpio.RaspiPin;
@@ -36,12 +34,14 @@ public class EntranceController {
 	
 	// Objects used to poll the ultrasonic entrance sensors
 	final GpioController gpio = GpioFactory.getInstance();
-	final GpioPinDigitalMultipurpose s1 = gpio.provisionDigitalMultipurposePin(
-			RaspiPin.GPIO_00, PinMode.DIGITAL_OUTPUT);
-	final GpioPinDigitalOutput s2Out = gpio.provisionDigitalOutputPin(
+	final GpioPinDigitalOutput s1Out = gpio.provisionDigitalOutputPin(
 			RaspiPin.GPIO_02, PinState.LOW);
-	final GpioPinDigitalInput s2In = gpio.provisionDigitalInputPin(
+	final GpioPinDigitalInput s1In = gpio.provisionDigitalInputPin(
 			RaspiPin.GPIO_03, PinPullResistance.PULL_DOWN);
+	final GpioPinDigitalOutput s2Out = gpio.provisionDigitalOutputPin(
+			RaspiPin.GPIO_04, PinState.LOW);
+	final GpioPinDigitalInput s2In = gpio.provisionDigitalInputPin(
+			RaspiPin.GPIO_05, PinPullResistance.PULL_DOWN);
 	
 	EntranceDisplay display;
 	XBee xBee;
@@ -49,7 +49,7 @@ public class EntranceController {
 	int controllerId = 0; // The entrance number
 	int nextEntranceId = 0;
 	long markerDisplayTime = 7000; // Milliseconds to display space markers
-	long thresholdDistance = 20; // Maximum detection distance
+	long thresholdDistance = 30; // Maximum detection distance in millimeters
 	
 	/**
 	 * The program will begin by initializing the necessary objects and
@@ -179,9 +179,9 @@ public class EntranceController {
 					if (rxResponse.getData()[0] == 'D') {
 						for (int i = 1; i < rxResponse.getData().length; i+=4)
 							suggestions.add(new int[]{
-									rxResponse.getData()[i] << 8 + 
+									(rxResponse.getData()[i] << 8) + 
 									rxResponse.getData()[i + 1], 
-									rxResponse.getData()[i + 2] << 8 +
+									(rxResponse.getData()[i + 2] << 8) +
 									rxResponse.getData()[i + 3]});
 						break;
 					} // if - correct response
@@ -203,15 +203,12 @@ public class EntranceController {
 	 */
 	private boolean checkVehicleDetected() {
 
-		if (!checkSensor(s2Out, s2In)) {
-			if (checkSensor(s1)) {
-				long firstTime = System.currentTimeMillis();
-				while (System.currentTimeMillis() - firstTime < 5000) {
-					if (checkSensor(s2Out, s2In))
-						return true;
-				} // while - timeout after 5 seconds
-				return false;
-			} // if - something at first sensor
+		if (!checkSensor(s2Out, s2In) && checkSensor(s1Out, s1In)) {
+			long startTime = System.currentTimeMillis();
+			while (System.currentTimeMillis() - startTime < 5000) {
+				if (checkSensor(s2Out, s2In))
+					return true;
+			} // while - timeout after 5 seconds
 			return false;
 		} // if - nothing at second sensor
 		else
@@ -243,6 +240,9 @@ public class EntranceController {
 		sensorOutPin.setState(PinState.LOW);
 		
 		// Time the resulting pulse at the echo pin
+		startTime = System.nanoTime();
+		do
+			if (System.nanoTime() - startTime > 38000) return false;
 		while (sensorInPin.isLow()) ; // Do nothing until pulse begins
 		startTime = System.nanoTime();
 		while (sensorInPin.isHigh()) ; // Do nothing until pulse is over
@@ -257,55 +257,14 @@ public class EntranceController {
 	} // checkSensor - 4 Pin
 	
 	/**
-	 * This method polls a three pin ultrasonic sensor at the given 
-	 * multipurpose pin and returns true if and only if an object is detected 
-	 * within the threshold distance.
-	 * 
-	 * @param sensorPin: The input/output pin of the ultrasonic sensor
-	 * @return true only if an object is detected
-	 */
-	private boolean checkSensor(GpioPinDigitalMultipurpose sensorPin) {
-		
-		// Set the pin as a digital output
-		sensorPin.setMode(PinMode.DIGITAL_OUTPUT);
-		
-		// Set the pin low momentarily to ensure a clean start
-		sensorPin.setState(PinState.LOW);
-		long startTime = System.nanoTime();
-		while (System.nanoTime() - startTime < 2000) ; // Do nothing
-		
-		// Pulse the pin high for 5 microseconds
-		sensorPin.setState(PinState.HIGH);
-		startTime = System.nanoTime();
-		while (System.nanoTime() - startTime < 5000) ; // Do nothing
-		sensorPin.setState(PinState.LOW);
-		
-		// Set the pin as a digital input
-		sensorPin.setMode(PinMode.DIGITAL_INPUT);
-		
-		// Time the resulting pulse
-		while (sensorPin.isLow()) ; // Do nothing until pulse begins
-		startTime = System.nanoTime();
-		while (sensorPin.isHigh()) ; // Do nothing until pulse is over
-		long endTime = System.nanoTime();
-		
-		// Return true only if the sensed distance is less than the threshold
-		if (distance((endTime - startTime) / 1000) < thresholdDistance)
-			return true;
-		else
-			return false;
-		
-	} // checkSensor - 3 Pin
-	
-	/**
 	 * This method converts the time of the input pulse from an ultrasonic 
-	 * sensor to an approximate distance in centimeters.
+	 * sensor to an approximate distance in millimeters.
 	 * 
 	 * @param time: The length of the sensor pulse in microseconds
 	 * @return
 	 */
 	private long distance(long time) {
-		return time / 29;
+		return time / 58;
 	} // distance
 	
 } // EntranceController - Class
