@@ -55,8 +55,8 @@ public class EntranceDisplay extends JPanel {
 		
 		try {
 			
-			lotFullImage = ImageIO.read(new File("LotFull.png"));
-			map = ImageIO.read(new File("LotTest.png"));
+			lotFullImage = ImageIO.read(new File("images/LotFull.png"));
+			map = ImageIO.read(new File("images/LotMap.png"));
 			if (frame.getWidth() <= frame.getHeight()) {
 				scaledMap = map.getScaledInstance(frame.getWidth(), -1, 
 						Image.SCALE_SMOOTH);
@@ -132,7 +132,7 @@ public class EntranceDisplay extends JPanel {
 		g.drawImage(scaledMap, mapLeftEdge, mapTopEdge, null);
 		
 		// Draws each space marker to the frame
-		int circleRadius = 10;
+		int circleRadius = 20;
 		g.setColor(Color.GREEN);
 		for (int i = 0; i < spaces.size(); i++)
 			g.fillOval(mapLeftEdge + (spaces.get(i)[0] * scaledMapWidth 
@@ -143,8 +143,10 @@ public class EntranceDisplay extends JPanel {
 		
 		if (this.displayLotFull)
 			g.drawImage(lotFullImage, 
-					scaledMapWidth/2 - lotFullImage.getWidth(null)/2, 
-					scaledMapHeight/2 - lotFullImage.getHeight(null)/2, null);
+					mapLeftEdge + scaledMapWidth/2 - 
+					lotFullImage.getWidth(null)/2, 
+					mapTopEdge + scaledMapHeight/2 - 
+					lotFullImage.getHeight(null)/2, null);
 		
 	} // paint
 	
