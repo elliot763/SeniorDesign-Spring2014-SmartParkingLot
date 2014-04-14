@@ -1,0 +1,35 @@
+<project name="EntranceController" default="run">
+
+	<path id="compilepath">
+		<fileset dir="./lib/jar">
+			<include name="*" />
+		</fileset>
+	</path>
+
+	<path id="runpath">
+		<pathelement location="bin" />
+		<pathelement location="lib" />
+		<pathelement location="images" />
+		<fileset dir="./lib/jar">
+			<include name="*" />
+		</fileset>
+	</path>
+
+	<target name="compile">
+		<mkdir dir="bin" />
+		<javac includeantruntime="false" srcdir="src/" destdir="bin/"
+			classpathref="compilepath" />
+	</target>
+
+	<target name="run" depends="compile">
+		<java classname="EntranceController" classpathref="runpath" fork="true">
+			<sysproperty key="java.library.path" path="/usr/lib/jni/" />
+			<arg value="/dev/ttyUSB0" />
+		</java>
+	</target>
+
+	<target name="clean">
+		<delete dir="bin/" />
+	</target>
+
+</project>
