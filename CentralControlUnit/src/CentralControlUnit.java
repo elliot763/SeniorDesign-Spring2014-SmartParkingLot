@@ -1,6 +1,7 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Scanner;
@@ -303,12 +304,19 @@ public class CentralControlUnit {
 	 */
 	private ParkingSpace[] sendBestSpaces(XBeeAddress64 address) {
 		
-		ParkingSpace[] bestSpaces = new ParkingSpace[this.destinations.size()];
+		// Gets a list of all spaces best spaces that exist
+		ArrayList<ParkingSpace> trimmedSpaces = new ArrayList<>();
 		for (int i = 0; i < this.destinations.size(); i++) {
-			bestSpaces[i] = this.destinations.get(i).getBestSpace();
-			if (bestSpaces[i] != null)
-				bestSpaces[i].setAvailable(false);
-		} // for - put each best space in array to be returned
+			if (this.destinations.get(i).getBestSpace() != null) {
+				trimmedSpaces.add(this.destinations.get(i).getBestSpace());
+				this.destinations.get(i).getBestSpace().setAvailable(false);
+			} // if - space exists
+		} // for - put each best space into an array list
+		
+		// Pack best spaces into an array to be returned
+		ParkingSpace[] bestSpaces = new ParkingSpace[trimmedSpaces.size()];
+		for (int i = 0; i < trimmedSpaces.size(); i++)
+			bestSpaces[i] = trimmedSpaces.get(i);
 		
 		int[] payload = new int[bestSpaces.length*4 + 1];
 		payload[0] = 'D';
