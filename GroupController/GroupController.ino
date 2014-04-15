@@ -1,12 +1,4 @@
-// Do not remove the include below
-#include "GroupController.h"
 #include <XBee.h>
-
-// Note: The "GroupController.h" include, as well as several other files in
-// this project, are an artifact of writing this code in Eclipse (in order to
-// simplify version control). This file may be saved as a standard .ino file
-// and the rest of the files (other than necessary dependencies) can be removed
-// when loading the program on to an Arduino.
 
 /*
  * This program allows an Arduino board to act as a group controller in a Smart
@@ -19,9 +11,9 @@
  */
 
 // Variables used to tune the operation of the Group Controller
-long distanceLimit = 50;
-long maxReservationTime = 60 * 1000;
-long minDetectionTime = 4000;
+long distanceLimit = 30; // Maximum distance before an object is detected
+long maxReservationTime = 20 * 1000; // Time before reservations time out
+long minDetectionTime = 4000; // Amount of time before a detection is processed
 
 // Area Indicator pins
 const int green = 13;
@@ -195,7 +187,7 @@ long checkDistance(int pingPin) {
  * sensor to an approximate distance in centimeters.
  */
 long distance(long time) {
-	return time/29;
+	return time/58;
 } // distance
 
 /*
