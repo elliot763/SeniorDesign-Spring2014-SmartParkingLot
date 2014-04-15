@@ -32,16 +32,12 @@ import com.rapplogic.xbee.api.zigbee.ZNetTxStatusResponse;
  */
 public class EntranceController {
 	
-	// Objects used to poll the ultrasonic entrance sensors
+	// Objects used to communicate with the Arduino/Entrance Sensors
 	final GpioController gpio = GpioFactory.getInstance();
-	final GpioPinDigitalOutput s1Out = gpio.provisionDigitalOutputPin(
+	final GpioPinDigitalOutput arduinoOut = gpio.provisionDigitalOutputPin(
 			RaspiPin.GPIO_02, PinState.LOW);
-	final GpioPinDigitalInput s1In = gpio.provisionDigitalInputPin(
+	final GpioPinDigitalInput arduinoIn = gpio.provisionDigitalInputPin(
 			RaspiPin.GPIO_03, PinPullResistance.PULL_DOWN);
-	final GpioPinDigitalOutput s2Out = gpio.provisionDigitalOutputPin(
-			RaspiPin.GPIO_04, PinState.LOW);
-	final GpioPinDigitalInput s2In = gpio.provisionDigitalInputPin(
-			RaspiPin.GPIO_05, PinPullResistance.PULL_DOWN);
 	
 	EntranceDisplay display;
 	XBee xBee;
@@ -49,7 +45,6 @@ public class EntranceController {
 	int controllerId = 0; // The entrance number
 	int nextEntranceId = 0;
 	long markerDisplayTime = 7000; // Milliseconds to display space markers
-	long thresholdDistance = 30; // Maximum detection distance in millimeters
 	
 	/**
 	 * The program will begin by initializing the necessary objects and
@@ -121,9 +116,6 @@ public class EntranceController {
 				} // else - lot full
 				
 			} // if - vehicle detected
-			
-			// Time between polling
-			Thread.sleep(100);
 
 		} // while - main program loop
 		
@@ -195,76 +187,25 @@ public class EntranceController {
 	} // getSpaceSuggestions
 	
 	/**
-	 * This method checks for a vehicle entering the lot by polling the 
-	 * entrance controller's sensors and returns true if one is detected or 
-	 * false otherwise.
+	 * This method waits for a vehicle to enter the lot, at which point the 
+	 * input pin from the arduino will become HIGH. Once this happens it will
+	 * pulse the output pin to the arduino HIGH for a short amount of time to
+	 * let the arduino know that it received the notification so that it will
+	 * return the input pin to it's LOW state. It then returns true.
 	 * 
-	 * @return true only if a vehicle is detected
+	 * @return true only when a vehicle is detected
 	 */
 	private boolean checkVehicleDetected() {
 
-		if (!checkSensor(s2Out, s2In) && checkSensor(s1Out, s1In)) {
-			long startTime = System.currentTimeMillis();
-			while (System.currentTimeMillis() - startTime < 5000) {
-				if (checkSensor(s2Out, s2In))
-					return true;
-			} // while - timeout after 5 seconds
-			return false;
-		} // if - nothing at second sensor
-		else
-			return false;
-	
+		while (arduinoIn.isLow()) ; // Wait for a notification
+		
+		// Acknowledge the notification by pulsing the output pin HIGH
+		arduinoOut.setState(PinState.HIGH);
+		long startTime = System.currentTimeMillis();
+		while (System.currentTimeMillis() - startTime < 200) ;
+		arduinoOut.setState(PinState.LOW);
+		return true;
+		
 	} // checkVehicleDetected
-	
-	/**
-	 * This method polls a four pin ultrasonic sensor at the given input and
-	 * output pins and returns true if and only if an object is detected within
-	 * the threshold distance.
-	 * 
-	 * @param sensorOutPin: The trigger pin of the four pin ultrasonic sensor
-	 * @param sensotInPin: The echo pin of the four pin ultrasonic sensor
-	 * @return true only if an object is detected
-	 */
-	private boolean checkSensor(GpioPinDigitalOutput sensorOutPin, 
-			GpioPinDigitalInput sensorInPin) {
-		
-		// Set the trigger pin low momentarily to ensure clean start
-		sensorOutPin.setState(PinState.LOW);
-		long startTime = System.nanoTime();
-		while (System.nanoTime() - startTime < 2000) ; // Do nothing
-		
-		// Pulse the trigger pin high for 10 microseconds
-		sensorOutPin.setState(PinState.HIGH);
-		startTime = System.nanoTime();
-		while (System.nanoTime() - startTime < 10000) ; // Do nothing
-		sensorOutPin.setState(PinState.LOW);
-		
-		// Time the resulting pulse at the echo pin
-		startTime = System.nanoTime();
-		do
-			if (System.nanoTime() - startTime > 38000) return false;
-		while (sensorInPin.isLow()) ; // Do nothing until pulse begins
-		startTime = System.nanoTime();
-		while (sensorInPin.isHigh()) ; // Do nothing until pulse is over
-		long endTime = System.nanoTime();
-		
-		// Return true only if the sensed distance is less than the threshold
-		if (distance((endTime - startTime) / 1000) < thresholdDistance)
-			return true;
-		else
-			return false;
-		
-	} // checkSensor - 4 Pin
-	
-	/**
-	 * This method converts the time of the input pulse from an ultrasonic 
-	 * sensor to an approximate distance in millimeters.
-	 * 
-	 * @param time: The length of the sensor pulse in microseconds
-	 * @return
-	 */
-	private long distance(long time) {
-		return time / 58;
-	} // distance
 	
 } // EntranceController - Class
